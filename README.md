@@ -1,4 +1,4 @@
-# qsharp_practice
+# Q# Practice
 A bunch of practice project for Q#
 
 # Contents
