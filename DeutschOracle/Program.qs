@@ -1,74 +1,52 @@
 ﻿namespace DeutschOracle {
 
-    open Microsoft.Quantum.Primitive;
     open Microsoft.Quantum.Canon;
     open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Measurement;
     
-    operation ConstantZero(input: Qubit, output: Qubit) : Unit{
+    operation OracleConstantZero(input: Qubit, output: Qubit) : Unit{
     }
 
-    operation ConstantOne(input: Qubit, output: Qubit) : Unit{
+    operation OracleConstantOne(input: Qubit, output: Qubit) : Unit{
         X(output);
     }
 
-    operation Identity(input: Qubit, output: Qubit) : Unit{
+    operation OracleIdentity(input: Qubit, output: Qubit) : Unit{
         CNOT(input, output);
     }
 
-    operation Negation(input: Qubit, output: Qubit) : Unit{
+    operation OracleNegation(input: Qubit, output: Qubit) : Unit{
         CNOT(input, output);
         X(output);
     }
 
-    @EntryPoint()
-    operation Main() : Unit {
-        Message("Hello quantum world!");
-    }
-    
-    operation IsBlackBoxConstant(blackBox: ((Qubit, Qubit) => ()) : (Bool){
-        // the output lines
-        mutable inputResult = Zero;
-        mutable outputResult = Zero;
-
-        // allocate two bits
+    operation RunBlackBox(oracle : ((Qubit, Qubit) => Unit)) : (Result, Result) {
         using (qbits = Qubit[2]){
-            // label the input and output qbits
+
             let input = qbits[0];
             let output = qbits[1];
 
-            // set qbits to zero in prep
-            Clear(input, output);
+            H(input);
+            H(output);
 
-            // pre process
-            X(input);
+            CNOT(input, output);
             X(output);
 
             H(input);
             H(output);
 
-            // send through black-box
-            blackBox(input, output);
-
-            //post processing
-            H(input);
-            H(output);
-
-            // measure the qbits
-            set inputResult = M(input);
-            set outputResult = M(output);
-
-            //clear the qbits before release
-            Clear(input, output);
-
-            // if input qbit is 1 then black box is constant if 0 then is variable
-            return One == inputResult;
+            return (MResetZ(input), MResetZ(output));
         }
     }
 
-    operation IsConstantZeroConstant() : (Bool){
-        body{
-            return IsBlackBoxConstant(ConstantZero);
-        }
+    @EntryPoint()
+    operation Main() : (Unit) {
+        Message($"{RunBlackBox(OracleConstantZero)}");
+        Message($"{RunBlackBox(OracleConstantOne)}");
+        Message($"{RunBlackBox(OracleIdentity)}");
+        Message($"{RunBlackBox(OracleNegation)}");
+        Message($"Hellor");
+
     }
+    
 }
-
